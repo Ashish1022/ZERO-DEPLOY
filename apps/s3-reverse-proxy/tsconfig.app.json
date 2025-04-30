@@ -1,13 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "out-tsc/api-server",
+    "outDir": "out-tsc/s3-reverse-proxy",
     "types": [
       "node",
       "express"
     ],
     "rootDir": "../../",
-    "tsBuildInfoFile": "out-tsc/api-server/tsconfig.app.tsbuildinfo"
+    "tsBuildInfoFile": "out-tsc/s3-reverse-proxy/tsconfig.app.tsbuildinfo"
   },
   "include": [
     "src/**/*.ts",
