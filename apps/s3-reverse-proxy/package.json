@@ -1,0 +1,28 @@
+{
+  "name": "@./s3-reverse-proxy",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "targets": {
+      "serve": {
+        "executor": "@nx/js:node",
+        "defaultConfiguration": "development",
+        "dependsOn": [
+          "build"
+        ],
+        "options": {
+          "buildTarget": "@./s3-reverse-proxy:build",
+          "runBuildTargetDependencies": false
+        },
+        "configurations": {
+          "development": {
+            "buildTarget": "@./s3-reverse-proxy:build:development"
+          },
+          "production": {
+            "buildTarget": "@./s3-reverse-proxy:build:production"
+          }
+        }
+      }
+    }
+  }
+}
