@@ -9,7 +9,7 @@ const app = express();
 
 app.post('/project', async (req, res) => {
     const { gitUrl } = req.body;
-    if (!gitUrl) throw new Error("GitHub Repository URL required!");
+    if (!gitUrl) return res.status(400).json({ error: "GitHub Repository URL required!" });
     const projectSlug = generateSlug();
 
     // TODO: DB integration for the purpose of storing user related and project related data also to check existing slugs.
