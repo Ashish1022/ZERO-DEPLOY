@@ -47,7 +47,6 @@ const kafka = new Kafka({
     }
 });
 const producer = kafka.producer();
-let producerConnected = true;
 
 /**
  * Publish a log message to Kafka
@@ -56,24 +55,20 @@ let producerConnected = true;
  */
 async function publishLog(log, level = 'log') {
     try {
-        if (producerConnected) {
-            await producer.send({
-                topic: `container-logs`, messages: [
-                    {
-                        key: level,
-                        value: JSON.stringify({
-                            PROJECT_ID,
-                            DEPLOYMENT_ID,
-                            log,
-                            timestamp: new Date().toISOString(),
-                            level,
-                        }),
-                    },
-                ]
-            });
-        } else {
-            console.log(`Kafka producer failed at: [${level}] ${log}]`);
-        }
+        await producer.send({
+            topic: `container-logs`, messages: [
+                {
+                    key: level,
+                    value: JSON.stringify({
+                        PROJECT_ID,
+                        DEPLOYMENT_ID,
+                        log,
+                        timestamp: new Date().toISOString(),
+                        level,
+                    }),
+                },
+            ]
+        });
     } catch (error) {
         console.error('Failed to publish log:', error);
     };
