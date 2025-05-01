@@ -1,16 +1,18 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { generateSlug } from 'random-word-slugs';
 import { RunTaskCommand } from '@aws-sdk/client-ecs';
-import { ecsClient } from '@packages/aws/ecs-client';
+import { ecsClient } from './utils/ecs-client';
 
 const port = process.env.API_SERVER_PORT || 9000;
 
 const app = express();
+app.use(express.json());
 
-app.post('/project', async (req, res) => {
-    const { gitUrl } = req.body;
+app.post('/project', async (req: Request, res: Response, next: NextFunction) => {
+    const { gitUrl, slug } = req.body;
+    console.log(gitUrl)
     if (!gitUrl) return res.status(400).json({ error: "GitHub Repository URL required!" });
-    const projectSlug = generateSlug();
+    const projectSlug = slug ? slug : generateSlug();
 
     // TODO: DB integration for the purpose of storing user related and project related data also to check existing slugs.
     // TODO: To implement user given project slug.
