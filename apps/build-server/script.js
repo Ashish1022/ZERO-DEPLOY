@@ -47,7 +47,7 @@ const kafka = new Kafka({
     }
 });
 const producer = kafka.producer();
-let producerConnected = false;
+let producerConnected = true;
 
 /**
  * Publish a log message to Kafka
