@@ -1,53 +1,29 @@
-import express, { NextFunction, Request, Response } from 'express';
-import { generateSlug } from 'random-word-slugs';
-import { RunTaskCommand } from '@aws-sdk/client-ecs';
-import { ecsClient } from './utils/ecs-client';
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import router from './routes/api.router';
+import { errorMiddleware } from '@packages/error-handler/error-middleware';
 
 const port = process.env.API_SERVER_PORT || 9000;
 
 const app = express();
+
+app.use(
+  cors({
+    origin: ["*"],
+    allowedHeaders: ["Authorization", "Content-Type"],
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
-app.post('/project', async (req: Request, res: Response, next: NextFunction) => {
-    const { gitUrl, slug } = req.body;
-    console.log(gitUrl)
-    if (!gitUrl) return res.status(400).json({ error: "GitHub Repository URL required!" });
-    const projectSlug = slug ? slug : generateSlug();
-
-    // TODO: DB integration for the purpose of storing user related and project related data also to check existing slugs.
-    // TODO: To implement user given project slug.
-
-    const command = new RunTaskCommand({
-        cluster: process.env.AWS_ECS_CLUSTER as string,
-        taskDefinition: process.env.AWS_TASK_DEFINITION as string,
-        launchType: 'FARGATE',
-        count: 1,
-        networkConfiguration: {
-            awsvpcConfiguration: {
-                subnets: [process.env.AWS_SUBNET_ONE as string, process.env.AWS_SUBNET_TWO as string, process.env.AWS_SUBNET_THREE as string],
-                securityGroups: [process.env.AWS_SECURITY_GROUP as string],
-                assignPublicIp: 'ENABLED',
-            },
-        },
-        overrides: {
-            containerOverrides: [
-                {
-                    name: process.env.AWS_ECR_IMAGE as string,
-                    environment: [
-                        { name: 'GIT_REPOSITORY_URL', value: gitUrl },
-                        { name: 'PROJECT_ID', value: projectSlug },
-                    ]
-                },
-            ],
-        },
-    });
-    await ecsClient.send(command);
-    return res.json({ status: 'queued', data: { projectSlug }, url: `http://${projectSlug}.localhost:8000` });
-});
+app.use('/api', router);
+app.use(errorMiddleware);
 
 const server = app.listen(port, () => {
-    console.log(`API Server listening at port ${port}`);
+  console.log(`API Server listening at port ${port}`);
 });
 server.on("error", (err) => {
-    console.log("Server Error: ", err);
+  console.log("Server Error: ", err);
 });
