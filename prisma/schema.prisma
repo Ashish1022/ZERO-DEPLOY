@@ -27,6 +27,9 @@ model Project {
 
   // Relations
   deployment Deployment[]
+
+  @@index([name])
+  @@index([subdomain])
 }
 
 model Deployment {
@@ -38,5 +41,8 @@ model Deployment {
 
   // Relations
   projectId String  @map("project_id")
-  project   Project @relation(fields: [projectId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt])
 }

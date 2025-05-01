@@ -1,20 +1,18 @@
-const { exec } = require("child_process");
-const path = require("path");
+const path = require('path');
 const fs = require("fs");
+const { exec } = require('child_process');
 const fsPromises = fs.promises;
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const mime = require("mime-types");
 const { Kafka } = require('kafkajs');
-const { createAwsIamSaslSigner } = require('aws-msk-iam-sasl-signer-js');
 
 const requiredEnvVars = [
+    'PROJECT_ID',
+    'DEPLOYMENT_ID',
+    'S3_BUCKET_NAME',
     'AWS_REGION',
     'AWS_ACCESS_KEY_ID',
     'AWS_SECRET_ACCESS_KEY',
-    'PROJECT_ID',
-    'DEPLOYMENT_ID',
-    'AWS_MKS_KAFKA',
-    'S3_BUCKET_NAME'
 ];
 
 for (const envVar of requiredEnvVars) {
@@ -25,8 +23,8 @@ for (const envVar of requiredEnvVars) {
 };
 
 const PROJECT_ID = process.env.PROJECT_ID;
-const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 const DEPLOYMENT_ID = process.env.DEPLOYMENT_ID;
+const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
@@ -38,18 +36,18 @@ const s3Client = new S3Client({
 
 const kafka = new Kafka({
     clientId: `docker-build-server-${DEPLOYMENT_ID}`,
-    brokers: [process.env.AWS_MKS_KAFKA],
-    sasl: {
-        mechanism: 'aws',
-        authenticationProvider: createAwsIamSaslSigner({
-            region: process.env.AWS_REGION
-        }),
+    brokers: ['kafka-1aa64488-sjxshj6874-8fa1.j.aivencloud.com:19445'],
+    ssl: {
+        ca: [fs.readFileSync(path.join(__dirname, 'ca.pem'), 'utf-8')]
     },
-    ssl: true
+    sasl: {
+        username: 'avnadmin',
+        password: 'AVNS_YqEi0U5c9vs6DRntr1f',
+        mechanism: 'plain'
+    }
 });
-
 const producer = kafka.producer();
-
+let producerConnected = false;
 
 /**
  * Publish a log message to Kafka
@@ -58,23 +56,27 @@ const producer = kafka.producer();
  */
 async function publishLog(log, level = 'log') {
     try {
-        await producer.send({
-            topic: `container-logs`, messages: [
-                {
-                    key: level,
-                    value: JSON.stringify({
-                        PROJECT_ID,
-                        DEPLOYMENT_ID,
-                        log,
-                        timestamp: new Date().toISOString(),
-                        level,
-                    }),
-                },
-            ]
-        });
+        if (producerConnected) {
+            await producer.send({
+                topic: `container-logs`, messages: [
+                    {
+                        key: level,
+                        value: JSON.stringify({
+                            PROJECT_ID,
+                            DEPLOYMENT_ID,
+                            log,
+                            timestamp: new Date().toISOString(),
+                            level,
+                        }),
+                    },
+                ]
+            });
+        } else {
+            console.log(`Kafka producer failed at: [${level}] ${log}]`);
+        }
     } catch (error) {
         console.error('Failed to publish log:', error);
-    }
+    };
 };
 
 
@@ -94,6 +96,51 @@ async function validatePath(pathToValidate) {
 
 
 /**
+ * Execute a build process
+ * @param {string} workingDir - Directory to run the build in
+ * @returns {Promise<void>}
+ */
+async function runBuild(workingDir) {
+    if (!(await validatePath(workingDir))) {
+        throw new Error(`Build directory not found: ${workingDir}`);
+    };
+
+    return new Promise((resolve, reject) => {
+        const buildProcess = exec(`cd ${workingDir} && npm install && npm run build`);
+
+        buildProcess.stdout.on('data', async (data) => {
+            const message = data.toString().trim();
+            if (message) {
+                console.log(message);
+                await publishLog(message);
+            };
+        });
+
+        buildProcess.stderr.on('data', async (data) => {
+            const message = data.toString().trim();
+            if (message) {
+                console.log(message);
+                await publishLog(message, 'error');
+            };
+        });
+
+        buildProcess.on('close', (code) => {
+            if (code === 0) resolve();
+            else reject(new Error(`Build process exited with code ${code}`));
+        });
+
+        buildProcess.on('error', (error) => {
+            reject(error);
+        });
+
+        runBuild.currentProcess = buildProcess;
+    });
+};
+
+// Store active processes for cleanup
+runBuild.currentProcess = null;
+
+/**
  * Upload a file to S3 preserving its directory structure
  * @param {string} basePath - Base path to calculate relative paths from
  * @param {string} filePath - Absolute path to the file
@@ -101,7 +148,6 @@ async function validatePath(pathToValidate) {
  */
 async function uploadFileToS3(basePath, filePath) {
     try {
-
         const normalizedBasePath = path.normalize(basePath);
         const normalizedFilePath = path.normalize(filePath);
 
@@ -119,15 +165,15 @@ async function uploadFileToS3(basePath, filePath) {
             Body: fs.createReadStream(filePath),
             ContentType: mime.lookup(filePath) || 'application/octet-stream'
         });
-
         await s3Client.send(command);
+
         console.log(`Uploaded ${relativePath} (${fileStats.size} bytes)`);
         await publishLog(`Uploaded ${relativePath} (${fileStats.size} bytes)`);
     } catch (error) {
         console.error(`Error uploading ${filePath}:`, error);
         await publishLog(`Error uploading ${filePath}: ${error.message}`, 'error');
         throw error;
-    }
+    };
 };
 
 
@@ -161,56 +207,6 @@ async function uploadDirectoryToS3(basePath, dirPath) {
 
 
 /**
- * Execute a build process
- * @param {string} workingDir - Directory to run the build in
- * @returns {Promise<void>}
- */
-async function runBuild(workingDir) {
-    if (!(await validatePath(workingDir))) {
-        throw new Error(`Build directory not found: ${workingDir}`);
-    };
-
-    return new Promise((resolve, reject) => {
-        const buildProcess = exec(`cd ${workingDir} && npm install && npm run build`);
-
-        buildProcess.stdout.on('data', async (data) => {
-            const message = data.toString().trim();
-            if (message) {
-                console.log(message);
-                await publishLog(message);
-            }
-        });
-
-        buildProcess.stderr.on('data', async (data) => {
-            const message = data.toString().trim();
-            if (message) {
-                console.error(message);
-                await publishLog(message, 'error');
-            }
-        });
-
-        buildProcess.on('close', (code) => {
-            if (code === 0) {
-                resolve();
-            } else {
-                reject(new Error(`Build process exited with code ${code}`));
-            }
-        });
-
-        buildProcess.on('error', (error) => {
-            reject(error);
-        });
-
-        runBuild.currentProcess = buildProcess;
-    });
-};
-
-
-// Store active processes for cleanup
-runBuild.currentProcess = null;
-
-
-/**
  * Gracefully shutdown all resources
  * @returns {Promise<void>}
  */
@@ -218,7 +214,12 @@ async function shutdown() {
     console.log('Shutting down resources...');
     if (runBuild.currentProcess) {
         console.log('Terminating active build process...');
+        const killTimeout = setTimeout(() => {
+            console.log('Forcefully killed the build process after timeout');
+            runBuild.currentProcess.kill();
+        }, 5000);
         runBuild.currentProcess.kill();
+        clearTimeout(killTimeout);
         runBuild.currentProcess = null;
     };
 
@@ -239,19 +240,15 @@ async function shutdown() {
  * @returns {Promise<void>}
  */
 async function init() {
-    let buildProcess = null;
     try {
         console.log(`Starting deployment in Docker container for Project: ${PROJECT_ID}, Deployment: ${DEPLOYMENT_ID}`);
         await producer.connect();
         console.log("Kafka producer connected");
-
-        console.log("Starting build process");
+        console.log('Starting build process');
         await publishLog("Build Started...");
 
         const outdirPath = path.join(__dirname, 'output');
-        if (!(await validatePath(outdirPath))) {
-            throw new Error(`Output directory not found: ${outdirPath}`);
-        };
+        if (!(await validatePath(outdirPath))) throw new Error(`Output directory not found: ${outdirPath}`);
 
         await runBuild(outdirPath);
 
@@ -267,7 +264,7 @@ async function init() {
 
         console.log("Deployment complete");
         await publishLog("Deployment complete");
-
+        process.exit(0);
     } catch (error) {
         console.error("Fatal error:", error);
         await publishLog(`Fatal error: ${error.message}`, 'error');
