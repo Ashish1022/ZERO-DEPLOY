@@ -3,8 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "node",
-      "express"
+      "node"
     ],
     "rootDir": "../../",
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo"
@@ -13,5 +12,14 @@
     "src/**/*.ts",
     "../../packages/**/*.ts"
   ],
-  "exclude": []
+  "exclude": [
+    "out-tsc",
+    "dist",
+    "jest.config.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "eslint.config.js",
+    "eslint.config.cjs",
+    "eslint.config.mjs"
+  ]
 }

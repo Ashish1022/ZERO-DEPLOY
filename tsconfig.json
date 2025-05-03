@@ -4,13 +4,19 @@
   "files": [],
   "references": [
     {
-      "path": "./apps/api-server-e2e"
+      "path": "./apps/auth-service-e2e"
     },
     {
-      "path": "./apps/api-server"
+      "path": "./apps/auth-service"
+    },
+    {
+      "path": "./apps/api-gateway"
     },
     {
       "path": "./apps/s3-reverse-proxy"
+    },
+    {
+      "path": "./apps/user-frontend"
     }
   ]
 }

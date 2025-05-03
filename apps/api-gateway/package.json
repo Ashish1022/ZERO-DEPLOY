@@ -1,5 +1,5 @@
 {
-  "name": "@./s3-reverse-proxy",
+  "name": "@./api-gateway",
   "version": "0.0.1",
   "private": true,
   "nx": {
@@ -11,15 +11,15 @@
           "build"
         ],
         "options": {
-          "buildTarget": "@./s3-reverse-proxy:build",
+          "buildTarget": "@./api-gateway:build",
           "runBuildTargetDependencies": false
         },
         "configurations": {
           "development": {
-            "buildTarget": "@./s3-reverse-proxy:build:development"
+            "buildTarget": "@./api-gateway:build:development"
           },
           "production": {
-            "buildTarget": "@./s3-reverse-proxy:build:production"
+            "buildTarget": "@./api-gateway:build:production"
           }
         }
       }
