@@ -1,0 +1,31 @@
+{
+  "name": "@zero-deploy/s3-reverse-proxy-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "start": "node src/index.js",
+    "dev": "tsx watch src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@zero-deploy/database": "workspace:*",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.7",
+    "drizzle-kit": "^0.30.4",
+    "drizzle-orm": "^0.38.4",
+    "express": "^5.2.1",
+    "http-proxy": "^1.18.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/http-proxy": "^1.17.17",
+    "@zero-deploy/typescript-config": "workspace:*",
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.3"
+  }
+}

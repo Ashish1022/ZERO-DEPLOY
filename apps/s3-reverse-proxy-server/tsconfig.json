@@ -1,0 +1,9 @@
+{
+  "extends": "@zero-deploy/typescript-config/base.json",
+  "compilerOptions": {
+    "moduleResolution": "Bundler",
+    "module": "ESNext"
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}

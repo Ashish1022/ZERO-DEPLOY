@@ -1,0 +1,22 @@
+@import "tailwindcss";
+@import "@zero-deploy/ui/globals.css";
+
+@source '../../../../packages/ui/src/**/*.{ts,tsx}';
+
+/* Log terminal */
+.log-terminal {
+  background: hsl(240 10% 4%);
+  color: hsl(0 0% 82%);
+  font-family: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+.log-line-error   { color: hsl(0 72% 65%); }
+.log-line-warn    { color: hsl(38 92% 60%); }
+.log-line-success { color: hsl(142 71% 55%); }
+.log-line-dim     { color: hsl(0 0% 50%); }
+
+/* Thin scrollbars */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 2px; }

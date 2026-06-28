@@ -1,0 +1,35 @@
+{
+  "name": "@zero-deploy/api-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "tsx watch src/index.js",
+    "build": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-ecs": "^3.1025.0",
+    "@clickhouse/client": "^1.18.2",
+    "@zero-deploy/database": "workspace:*",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.7",
+    "express": "^5.2.1",
+    "kafkajs": "^2.2.4",
+    "uuid": "^13.0.0",
+    "ws": "^8.20.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/ws": "^8.18.1",
+    "@zero-deploy/typescript-config": "workspace:*",
+    "drizzle-orm": "^0.38.4",
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@zero-deploy/auth-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./cookie": "./src/lib/cookie.ts",
+    "./utils": "./src/lib/utils.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@zero-deploy/redis": "workspace:*",
+    "ejs": "^5.0.1",
+    "nodemailer": "^8.0.1"
+  },
+  "devDependencies": {
+    "@types/ejs": "^3.1.5",
+    "@types/nodemailer": "^7.0.11",
+    "@zero-deploy/typescript-config": "workspace:*",
+    "dotenv": "^16.4.7",
+    "next": "16.2.2",
+    "typescript": "^5.7.3"
+  }
+}
