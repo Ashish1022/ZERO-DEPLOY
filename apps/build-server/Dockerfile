@@ -7,7 +7,7 @@ WORKDIR /home/app
 COPY package*.json ./
 RUN npm install
 
-COPY main.sh script.js ./
+COPY main.sh script.js kafka.pem ./
 
 RUN chmod +x main.sh
 

@@ -9,7 +9,7 @@ import { desc, eq } from 'drizzle-orm'
 import { client, runECSTask } from '../helpers/api.helper';
 
 import { db } from '@zero-deploy/database'
-import { deployment, project } from '@zero-deploy/database/schema'
+import { deployment, envVar, project } from '@zero-deploy/database/schema'
 
 export const deployProject = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -58,6 +58,11 @@ export const deployProject = async (req: Request, res: Response, next: NextFunct
 
         if (!newDeployment) throw new Error("Failed to create deployment");
 
+        const envVars = await db
+            .select({ key: envVar.key, value: envVar.value })
+            .from(envVar)
+            .where(eq(envVar.projectId, projectId));
+
         let result;
         try {
             await runECSTask({
@@ -68,6 +73,7 @@ export const deployProject = async (req: Request, res: Response, next: NextFunct
                 buildCommand: deploymentProject.buildCommand,
                 outputDir: deploymentProject.outputDir,
                 rootDir: deploymentProject.rootDir,
+                envVars,
             });
 
             const [updatedDeployment] = await db
@@ -100,13 +106,21 @@ export const deployProject = async (req: Request, res: Response, next: NextFunct
 
 export const getLogs = async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id;
-    const logs = await client.query({
-        query: 'SELECT event_id, deployment_id, log, timestamp FROM log_events WHERE deployment_id = {deployment_id:String}',
-        query_params: {
-            deployment_id: id,
-        },
-        format: 'JSONEachRow'
-    });
-    const rawLogs = await logs.json();
-    res.json({ logs: rawLogs });
+    try {
+        const logs = await client.query({
+            query: 'SELECT event_id, deployment_id, log, timestamp FROM log_events WHERE deployment_id = {deployment_id:String} ORDER BY timestamp',
+            query_params: {
+                deployment_id: id,
+            },
+            format: 'JSONEachRow'
+        });
+        const rawLogs = await logs.json();
+        res.json({ logs: rawLogs });
+    } catch (error: any) {
+        if (typeof error?.message === 'string' && /doesn't exist|UNKNOWN_TABLE/i.test(error.message)) {
+            res.json({ logs: [] });
+            return;
+        }
+        return next(error);
+    }
 }

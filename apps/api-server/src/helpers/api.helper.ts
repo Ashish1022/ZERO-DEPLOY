@@ -22,6 +22,7 @@ export const runECSTask = async ({
     buildCommand,
     outputDir,
     rootDir,
+    envVars,
 }: {
     gitUrl: string;
     projectId: string;
@@ -30,6 +31,7 @@ export const runECSTask = async ({
     buildCommand?: string | null;
     outputDir?: string | null;
     rootDir?: string | null;
+    envVars?: { key: string; value: string }[];
 }) => {
     const command = new RunTaskCommand({
         cluster: process.env.AWS_ECS_CLUSTER as string,
@@ -59,6 +61,14 @@ export const runECSTask = async ({
                         { name: 'BUILD_COMMAND', value: buildCommand || 'npm run build' },
                         { name: 'OUTPUT_DIR', value: outputDir || 'dist' },
                         { name: 'ROOT_DIR', value: rootDir || '/' },
+                        { name: 'PROJECT_ENV', value: JSON.stringify(envVars ?? []) },
+                        { name: 'KAFKA_BROKER', value: process.env.KAFKA_BROKER ?? '' },
+                        { name: 'KAFKA_USERNAME', value: process.env.KAFKA_USERNAME ?? '' },
+                        { name: 'KAFKA_PASSWORD', value: process.env.KAFKA_PASSWORD ?? '' },
+                        { name: 'AWS_REGION', value: process.env.AWS_REGION ?? 'ap-south-1' },
+                        { name: 'AWS_ACCESS_KEY_ID', value: process.env.AWS_ACCESS_KEY_ID ?? '' },
+                        { name: 'AWS_SECRET_ACCESS_KEY', value: process.env.AWS_SECRET_ACCESS_KEY ?? '' },
+                        { name: 'AWS_S3_BUCKET', value: process.env.AWS_S3_BUCKET ?? '' },
                     ]
                 },
             ],

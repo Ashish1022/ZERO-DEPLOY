@@ -1,27 +1,25 @@
-FROM ubuntu:22.04
+# syntax=docker/dockerfile:1
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y curl wget git build-essential && rm -rf /var/lib/apt/lists/*
-
-RUN curl -fsSl https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
-
-RUN npm install -g pnpm 
-RUN npm install -g typescript
-
+FROM node:20-alpine AS base
+RUN corepack enable
 WORKDIR /app
 
-COPY package*.json ./
-COPY pnpm-lock.yaml .
-COPY tsconfig.json .
-COPY .env ./
+FROM base AS deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/api-server/package.json            apps/api-server/
+COPY packages/database/package.json          packages/database/
+COPY packages/typescript-config/package.json packages/typescript-config/
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --filter @zero-deploy/api-server...
 
-RUN pnpm install
+FROM base AS runner
+ENV NODE_ENV=production
+ENV PORT=9000
 
-COPY . .
+COPY --from=deps /app ./
+COPY packages/database packages/database
+COPY apps/api-server   apps/api-server
 
-RUN pnpm build
-
-EXPOSE 3000
-
-CMD [ "pnpm", "start" ]
+EXPOSE 9000
+WORKDIR /app/apps/api-server
+CMD ["pnpm", "exec", "tsx", "src/index.ts"]

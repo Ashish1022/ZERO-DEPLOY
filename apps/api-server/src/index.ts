@@ -59,16 +59,20 @@ server.on('upgrade', (req, socket, head) => {
     });
 });
 
-ensureClickHouseSchema()
-    .then(() => initKafkaConsumer())
-    .catch((err) => {
-        console.error('Startup failed:', err);
-        process.exit(1);
-    });
-
 const port = process.env.PORT;
-server.listen(port, () => {
-    console.log(`API server listening at http://localhost:${port}`);
-    console.log(`WebSocket log stream at ws://localhost:${port}/logs/:deploymentId`);
+
+async function start() {
+    await ensureClickHouseSchema();
+    await initKafkaConsumer();
+
+    server.listen(port, () => {
+        console.log(`API server listening at http://localhost:${port}`);
+        console.log(`WebSocket log stream at ws://localhost:${port}/logs/:deploymentId`);
+    });
+    server.on('error', console.error);
+}
+
+start().catch((err) => {
+    console.error('Startup failed:', err);
+    process.exit(1);
 });
-server.on('error', console.error);
