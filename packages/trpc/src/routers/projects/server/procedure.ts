@@ -219,7 +219,7 @@ export const projectsRouter = createTRPCRouter({
       }
 
       const response = await fetch(
-        `${process.env.API_SERVER_URL || 'http://localhost:9000'}/deploy-project`,
+        `${process.env.API_SERVER_URL || 'http://localhost:9001'}/deploy-project`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

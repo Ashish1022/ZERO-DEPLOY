@@ -26,7 +26,7 @@ function classifyLog(line: string): string {
   return "log-line-dim";
 }
 
-const API_SERVER = process.env.NEXT_PUBLIC_API_SERVER_URL ?? "http://localhost:9000";
+const API_SERVER = process.env.NEXT_PUBLIC_API_SERVER_URL ?? "http://localhost:9001";
 
 export default function DeploymentPage({ params }: { params: Promise<{ id: string; deployId: string }> }) {
   const { id, deployId } = use(params);

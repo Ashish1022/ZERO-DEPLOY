@@ -8,11 +8,11 @@ services:
     container_name: api-server
     restart: unless-stopped
     ports:
-      - "9000:9000"
+      - "9001:9001"
     env_file: ./repo/.env
     environment:
       NODE_ENV: production
-      PORT: 9000
+      PORT: 9001
       KAFKA_BROKER: kafka:9092
       CLICKHOUSE_URL: http://clickhouse:8123
     networks:
@@ -45,7 +45,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      NEXT_PUBLIC_API_SERVER_URL: http://<EC2_PUBLIC_IP>:9000
+      NEXT_PUBLIC_API_SERVER_URL: http://13.233.192.101:9001
     networks:
       - infra
 
