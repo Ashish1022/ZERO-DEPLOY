@@ -23,6 +23,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY --from=deps /app/node_modules                  ./node_modules
 COPY --from=deps /app/apps/zero/node_modules        ./apps/zero/node_modules
+COPY --from=deps /app/packages/trpc/node_modules    ./packages/trpc/node_modules
+COPY --from=deps /app/packages/ui/node_modules      ./packages/ui/node_modules
+COPY --from=deps /app/packages/auth/node_modules    ./packages/auth/node_modules
+COPY --from=deps /app/packages/redis/node_modules   ./packages/redis/node_modules
+COPY --from=deps /app/packages/database/node_modules ./packages/database/node_modules
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/typescript-config  packages/typescript-config
