@@ -40,6 +40,8 @@ COPY packages/eslint-config      packages/eslint-config
 COPY apps/zero                   apps/zero
 
 WORKDIR /app/apps/zero
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
 RUN /app/apps/zero/node_modules/.bin/next build
 
 FROM base AS runner
