@@ -21,7 +21,8 @@ FROM base AS builder
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules                  ./node_modules
+COPY --from=deps /app/apps/zero/node_modules        ./apps/zero/node_modules
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/typescript-config  packages/typescript-config
@@ -34,7 +35,7 @@ COPY packages/eslint-config      packages/eslint-config
 COPY apps/zero                   apps/zero
 
 WORKDIR /app/apps/zero
-RUN /app/node_modules/.bin/next build
+RUN /app/apps/zero/node_modules/.bin/next build
 
 FROM base AS runner
 ENV NODE_ENV=production
