@@ -1,5 +1,5 @@
 import './env';
- 
+
 import http from 'http';
 import cors from 'cors';
 import express from 'express';
@@ -10,7 +10,7 @@ import { ensureClickHouseSchema, initKafkaConsumer, notifyLogSubscribers } from 
 
 const app = express();
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use('/', router);
 
