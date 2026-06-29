@@ -34,7 +34,7 @@ COPY packages/eslint-config      packages/eslint-config
 COPY apps/zero                   apps/zero
 
 WORKDIR /app/apps/zero
-RUN pnpm exec next build
+RUN /app/node_modules/.bin/next build
 
 FROM base AS runner
 ENV NODE_ENV=production
