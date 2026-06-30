@@ -218,8 +218,10 @@ export const projectsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Project not found' });
       }
 
+      const apiServerUrl = process.env.NEXT_PUBLIC_API_SERVER_URL ?? 'http://localhost:9001';
+
       const response = await fetch(
-        `http://13.233.192.101:9001/deploy-project`,
+        `${apiServerUrl}/deploy-project`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
